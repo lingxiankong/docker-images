@@ -5,4 +5,5 @@ RUN apk --no-cache add curl
 ADD webserver.py /webserver.py
 
 EXPOSE 8080
+EXPOSE 443
 CMD python /webserver.py
