@@ -21,8 +21,12 @@ alias oag="openstack aggregate"
 
 # Octavia
 alias lb="openstack loadbalancer"
-alias lbdelete="openstack loadbalancer delete --cascade"
 alias lbhealth="openstack loadbalancer healthmonitor"
+alias lbstatus="openstack loadbalancer status show"
+alias lbam="openstack loadbalancer amphora list --long --loadbalancer"
+function lbstatus() {
+    openstack loadbalancer status show $1 | yq -y .
+}
 function lbvipsg() {
     portid=$(openstack loadbalancer show $1 -c vip_port_id -f value)
     openstack port show $portid -f value -c security_group_ids
@@ -43,14 +47,11 @@ function lbvipfip() {
     echo "Attach floating IP $fip to port $portid"
     openstack floating ip set $fip --port $portid
 }
-alias lbstatus="openstack loadbalancer status show"
-function lbam() {
-    local lbid=$1
-    openstack loadbalancer amphora list --loadbalancer $lbid
-    ams=$(openstack loadbalancer amphora list --loadbalancer $lbid -c id -f value)
-    for i in $ams; do
-        vm=$(openstack loadbalancer amphora show $i -c compute_id -f value)
-        echo "Amphora $i: $vm"
+function lbdelete() {
+    for id in "$@"
+    do
+        openstack loadbalancer delete --cascade $id
+        echo "loadbalancer $id is deleted"
     done
 }
 
@@ -63,10 +64,6 @@ alias osrl="openstack stack resource list"
 alias osg="openstack security group"
 alias ofip="openstack floating ip"
 alias ovmports="openstack port list --device-id"
-function ovmsg() {
-    portid=$(openstack port list --device-id $1 -f value -c id | awk 'NR==1 {print}')
-    openstack port show $portid -f value -c security_group_ids
-}
 function ovmfip() {
     local vmid=$1
     local public_net=$2
@@ -110,3 +107,4 @@ alias odb="openstack database"
 alias odbi="openstack database instance"
 alias odba="openstack database instance list --all-projects"
 alias odbconf="openstack database configuration"
+alias odbashort='odba -c ID -c Name -c Status -c "Operating Status" -c "Tenant ID"'
